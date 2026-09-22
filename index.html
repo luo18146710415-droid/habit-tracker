@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#f4f7f9" />
+<title>今日打卡</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%85%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #f4f7f9;
+    --card: #ffffff;
+    --text: #1f2733;
+    --muted: #8b95a5;
+    --line: #edf0f4;
+    --accent: #34d399;
+    --accent-strong: #10b981;
+    --accent-soft: #e9f9f2;
+    --danger: #e8656b;
+    --shadow: 0 8px 24px rgba(23, 43, 77, .06), 0 1px 2px rgba(23, 43, 77, .05);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+    background:
+      radial-gradient(900px 420px at 50% -160px, #e6f7f0 0%, rgba(230, 247, 240, 0) 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(16, 185, 129, .5);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+
+  .app {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .banner {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #fff7e6;
+    border: 1px solid #ffe2b3;
+    color: #8a5b00;
+    font-size: 13px;
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 4px 6px 0;
+  }
+
+  .head h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: .5px;
+  }
+
+  .today {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 20px;
+    border: 1px solid rgba(23, 43, 77, .04);
+    box-shadow: var(--shadow);
+  }
+
+  .progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 22px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .ring-track {
+    fill: none;
+    stroke: #e5e7eb;
+    stroke-width: 11;
+  }
+
+  .ring-value {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 11;
+    stroke-linecap: round;
+    stroke-dasharray: 364.42;
+    stroke-dashoffset: 364.42;
+    transform: rotate(-90deg);
+    transform-origin: 66px 66px;
+    transition: stroke-dashoffset .45s ease, stroke .3s ease;
+  }
+
+  .ring-center {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    font-size: 26px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .5px;
+  }
+
+  .ring-sep {
+    color: #c3cbd6;
+    font-weight: 500;
+  }
+
+  .progress-text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .progress.complete .progress-text {
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+
+  .list-card { padding: 8px; }
+
+  .habit-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .habit {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 56px;
+    padding: 4px 6px;
+    border-radius: 14px;
+    transition: background .15s ease;
+  }
+
+  .habit + .habit { border-top: 1px solid var(--line); }
+  .habit:hover { background: #fafcfd; }
+
+  .habit-emoji {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+    line-height: 1;
+    transition: background .15s ease;
+  }
+
+  .habit-emoji:hover { background: #f0f4f7; }
+
+  .habit-name-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 8px;
+    border-radius: 10px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+
+  .habit-name {
+    overflow-wrap: anywhere;
+    font-size: 15.5px;
+  }
+
+  .habit.done .habit-name {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .rename-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 4px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1px solid #cfd8e3;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 15.5px;
+  }
+
+  .rename-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .18);
+  }
+
+  .habit-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    color: #9aa4b2;
+    opacity: .7;
+    transition: background .15s ease, color .15s ease, opacity .15s ease;
+  }
+
+  .habit:hover .icon-btn { opacity: 1; }
+  .icon-btn:hover { background: #f0f4f7; color: #4d5766; }
+
+  .icon-btn.danger:hover {
+    background: #fdeff0;
+    color: var(--danger);
+  }
+
+  .confirm-text {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    padding-right: 2px;
+  }
+
+  .mini-btn {
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: #f2f5f8;
+    color: #4d5766;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background .15s ease;
+  }
+
+  .mini-btn:hover { background: #e8edf3; }
+
+  .mini-btn.danger {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  .mini-btn.danger:hover { background: #d9555c; }
+
+  .check {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+    border-radius: 50%;
+    border: 2px solid #dbe2ea;
+    display: grid;
+    place-items: center;
+    color: transparent;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+  }
+
+  .check svg { width: 15px; height: 15px; }
+
+  .habit.done .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .palette {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% - 4px);
+    left: 8px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(23, 43, 77, .16);
+  }
+
+  .palette button {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    line-height: 1;
+    transition: background .15s ease;
+  }
+
+  .palette button:hover { background: #f0f4f7; }
+  .palette button[aria-pressed="true"] { background: var(--accent-soft); }
+
+  .empty {
+    margin: 0;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .add-form {
+    display: flex;
+    gap: 10px;
+  }
+
+  .add-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 50px;
+    padding: 0 16px;
+    border-radius: 15px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    box-shadow: 0 1px 2px rgba(23, 43, 77, .04);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+
+  .add-input::placeholder { color: #aab4c1; }
+
+  .add-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .18);
+  }
+
+  .add-button {
+    flex: 0 0 auto;
+    height: 50px;
+    padding: 0 22px;
+    border-radius: 15px;
+    background: var(--accent-strong);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, .25);
+    transition: background .15s ease, transform .1s ease;
+  }
+
+  .add-button:hover { background: #0ea472; }
+  .add-button:active { transform: translateY(1px); }
+
+  .hint {
+    margin: 0;
+    padding-left: 6px;
+    font-size: 13px;
+    color: #c2761a;
+  }
+
+  .history { padding: 16px 14px 12px; }
+
+  .history-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px 12px;
+  }
+
+  .history-head h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 650;
+  }
+
+  .history-summary {
+    flex: 1 1 auto;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .link-btn {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: #f2f5f8;
+    color: #4d5766;
+    font-size: 12.5px;
+    white-space: nowrap;
+    transition: background .15s ease;
+  }
+
+  .link-btn:hover { background: #e8edf3; }
+
+  .history-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(7, 22px);
+    gap: 8px 6px;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0 4px;
+  }
+
+  .history-grid li { display: contents; }
+
+  .hcell-day {
+    text-align: center;
+    font-size: 11.5px;
+    color: #a9b3c1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hcell-day.is-today {
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+
+  .hname-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .hname-cell .hemoji { flex: 0 0 auto; font-size: 15px; }
+
+  .hname-cell .hname {
+    min-width: 0;
+    font-size: 14px;
+    color: #4d5766;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hdot {
+    justify-self: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #e3e8ef;
+    display: grid;
+    place-items: center;
+    color: transparent;
+  }
+
+  .hdot svg { width: 11px; height: 11px; }
+  .hdot.done { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hdot.muted { border-color: transparent; background: #f3f6f9; }
+  .hdot.is-today { box-shadow: 0 0 0 3px rgba(52, 211, 153, .16); }
+
+  .history-days {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 8px 4px 2px;
+    border-top: 1px solid var(--line);
+    max-height: 264px;
+    overflow-y: auto;
+  }
+
+  .history-days li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 2px;
+    font-size: 13.5px;
+  }
+
+  .hday-date { flex: 1 1 auto; color: #4d5766; }
+  .hday-emoji { flex: 0 0 auto; letter-spacing: 1px; }
+  .hday-count { flex: 0 0 auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hday-count.full { color: var(--accent-strong); font-weight: 600; }
+  .hday-empty { color: var(--muted); font-size: 13px; }
+
+  @media (hover: none) {
+    .icon-btn { opacity: 1; }
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 20px 12px 44px; }
+    .head h1 { font-size: 21px; }
+    .progress { padding: 18px 16px 16px; }
+    .ring { width: 112px; height: 112px; }
+    .ring-center { font-size: 22px; }
+    .habit { min-height: 60px; }
+    .habit-emoji, .icon-btn { width: 44px; height: 44px; }
+    .palette { left: 0; }
+    .palette button { width: 32px; height: 32px; }
+    .add-button { padding: 0 18px; }
+    .history { padding: 14px 10px 10px; }
+    .history-grid { grid-template-columns: minmax(0, 1fr) repeat(7, 19px); gap: 8px 4px; }
+    .hdot { width: 18px; height: 18px; }
+    .hdot svg { width: 10px; height: 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <p id="storage-warning" class="banner" hidden>当前浏览器无法保存数据，刷新后记录会丢失</p>
+
+  <header class="head">
+    <h1>今日打卡</h1>
+    <p id="today-label" class="today">—</p>
+  </header>
+
+  <section class="card progress">
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 132 132" width="132" height="132" aria-hidden="true">
+        <circle class="ring-track" cx="66" cy="66" r="58" />
+        <circle id="ring-value" class="ring-value" cx="66" cy="66" r="58" />
+      </svg>
+      <div class="ring-center">
+        <span id="count-done">0</span>
+        <span class="ring-sep">/</span>
+        <span id="count-total">0</span>
+      </div>
+    </div>
+    <p id="progress-text" class="progress-text">—</p>
+  </section>
+
+  <section class="card list-card">
+    <ul id="habit-list" class="habit-list" aria-label="今天的习惯"></ul>
+    <p id="empty-state" class="empty" hidden>还没有习惯，先在下面添加一个吧 👇</p>
+  </section>
+
+  <section id="history-card" class="card history" hidden>
+    <div class="history-head">
+      <h2>最近 7 天</h2>
+      <span id="history-summary" class="history-summary">累计打卡 0 次</span>
+      <button id="history-toggle" class="link-btn" type="button" aria-expanded="false" aria-controls="history-days">全部记录</button>
+    </div>
+    <ul id="history-grid" class="history-grid" aria-label="最近 7 天打卡情况"></ul>
+    <ul id="history-days" class="history-days" hidden></ul>
+  </section>
+
+  <form id="add-form" class="add-form" autocomplete="off">
+    <input id="add-input" class="add-input" type="text" maxlength="24" placeholder="添加一个新习惯，比如：背单词" aria-label="新习惯名称" />
+    <button id="add-button" class="add-button" type="submit">添加</button>
+  </form>
+  <p id="add-hint" class="hint" role="status" hidden></p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'habit-tracker:v1';
+  var CIRC = 2 * Math.PI * 58;
+  var WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  var EMOJI_PRESETS = ['💧', '🏃', '📖', '🧘', '🌙', '💪', '🥗', '☀️', '✍️', '🎹', '🧹', '💰', '🚶', '🦷', '💊', '✨'];
+  var EMOJI_RULES = [
+    [['喝水', '饮水', '喝够水', '杯水', 'water', 'drink', 'hydrate'], '💧'],
+    [['早睡', '睡觉', '晚安', '不熬夜', 'sleep'], '🌙'],
+    [['早起', '起床', '早安', 'sunrise', 'wake'], '☀️'],
+    [['运动', '跑步', '慢跑', '晨跑', '夜跑', '快走', '有氧', 'run', 'jog', 'cardio', 'exercise'], '🏃'],
+    [['健身', '锻炼', '撸铁', '力量', '俯卧撑', '平板支撑', '深蹲', 'workout', 'gym'], '💪'],
+    [['单词', '英语', '阅读', '读书', '看书', '学习', '复习', '背书', 'study', 'read', 'vocab', 'learn', 'book'], '📖'],
+    [['冥想', '打坐', '正念', '瑜伽', '拉伸', 'meditat', 'yoga', 'stretch'], '🧘'],
+    [['日记', '写作', '练字', '复盘', 'journal', 'writing'], '✍️'],
+    [['钢琴', '练琴', '吉他', '乐器', 'piano', 'music'], '🎹'],
+    [['整理', '打扫', '收拾', '清洁', '叠被', '家务', 'clean', 'tidy'], '🧹'],
+    [['记账', '省钱', '存钱', '理财', '预算', 'money', 'budget'], '💰'],
+    [['走路', '步数', '散步', '遛狗', '万步', 'walk', 'steps'], '🚶'],
+    [['刷牙', '牙齿', 'tooth', 'brush'], '🦷'],
+    [['吃药', '维生素', '补剂', '保健品', 'medicin', 'vitamin'], '💊'],
+    [['蔬菜', '轻食', '沙拉', '少糖', '早餐', '健康饮食', 'diet', 'salad', 'vegetable'], '🥗']
+  ];
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></svg>';
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20z"/></svg>';
+  var ICON_DELETE = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+
+  var listEl = document.getElementById('habit-list');
+  var emptyEl = document.getElementById('empty-state');
+  var ringEl = document.getElementById('ring-value');
+  var doneEl = document.getElementById('count-done');
+  var totalEl = document.getElementById('count-total');
+  var progressTextEl = document.getElementById('progress-text');
+  var progressCardEl = document.querySelector('.progress');
+  var todayLabelEl = document.getElementById('today-label');
+  var addFormEl = document.getElementById('add-form');
+  var addInputEl = document.getElementById('add-input');
+  var addHintEl = document.getElementById('add-hint');
+  var bannerEl = document.getElementById('storage-warning');
+  var historyCardEl = document.getElementById('history-card');
+  var historyGridEl = document.getElementById('history-grid');
+  var historyDaysEl = document.getElementById('history-days');
+  var historyToggleEl = document.getElementById('history-toggle');
+  var historySummaryEl = document.getElementById('history-summary');
+
+  var state = { version: 1, habits: [], logs: {} };
+  var storageOk = true;
+  var editingId = null;
+  var paletteId = null;
+  var deletingId = null;
+  var currentDay = '';
+  var hintTimer = null;
+  var historyExpanded = false;
+
+  /* ---------- 基础工具 ---------- */
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function todayKey(date) {
+    var d = date || new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function formatDateLabel(date) {
+    var d = date || new Date();
+    return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEKDAYS[d.getDay()];
+  }
+
+  function makeId() {
+    try {
+      if (typeof crypto !== 'undefined' && crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+    } catch (err) { /* 忽略，使用回退方案 */ }
+    return 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function matchEmoji(name) {
+    var lower = String(name == null ? '' : name).toLowerCase();
+    for (var i = 0; i < EMOJI_RULES.length; i++) {
+      var keywords = EMOJI_RULES[i][0];
+      for (var j = 0; j < keywords.length; j++) {
+        if (lower.indexOf(keywords[j]) !== -1) return EMOJI_RULES[i][1];
+      }
+    }
+    return '✨';
+  }
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  /* ---------- 数据存取 ---------- */
+
+  function probeStorage() {
+    try {
+      var probe = '__habit_probe__';
+      window.localStorage.setItem(probe, '1');
+      window.localStorage.removeItem(probe);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function normalizeState(data) {
+    var out = { version: 1, habits: [], logs: {} };
+    if (!data || typeof data !== 'object') return out;
+
+    var ids = {};
+    if (Array.isArray(data.habits)) {
+      for (var i = 0; i < data.habits.length; i++) {
+        var raw = data.habits[i];
+        if (!raw || typeof raw.name !== 'string') continue;
+        var name = raw.name.trim();
+        if (!name) continue;
+        var id = (typeof raw.id === 'string' && raw.id) ? raw.id : makeId();
+        if (ids[id]) id = makeId();
+        ids[id] = true;
+        out.habits.push({
+          id: id,
+          name: name,
+          emoji: (typeof raw.emoji === 'string' && raw.emoji) ? raw.emoji : matchEmoji(name),
+          createdAt: (typeof raw.createdAt === 'string' && raw.createdAt) ? raw.createdAt : todayKey()
+        });
+      }
+    }
+
+    if (data.logs && typeof data.logs === 'object') {
+      var days = Object.keys(data.logs);
+      for (var k = 0; k < days.length; k++) {
+        var day = days[k];
+        var list = data.logs[day];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(list)) continue;
+        var kept = [];
+        for (var m = 0; m < list.length; m++) {
+          var hid = list[m];
+          if (typeof hid === 'string' && ids[hid] && kept.indexOf(hid) === -1) kept.push(hid);
+        }
+        if (kept.length) out.logs[day] = kept;
+      }
+    }
+
+    return out;
+  }
+
+  function loadState() {
+    storageOk = probeStorage();
+    if (!storageOk) return;
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      state = normalizeState(JSON.parse(raw));
+    } catch (err) {
+      state = { version: 1, habits: [], logs: {} };
+    }
+  }
+
+  function save() {
+    if (!storageOk) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+      storageOk = false;
+      updateBanner();
+    }
+  }
+
+  function updateBanner() {
+    if (bannerEl) bannerEl.hidden = storageOk;
+  }
+
+  /* ---------- 业务操作 ---------- */
+
+  function doneList(day) {
+    var list = state.logs[day];
+    return Array.isArray(list) ? list : [];
+  }
+
+  function isDone(id) {
+    return doneList(currentDay).indexOf(id) !== -1;
+  }
+
+  function hasDuplicateName(name, exceptId) {
+    var key = String(name).trim().toLowerCase();
+    for (var i = 0; i < state.habits.length; i++) {
+      var h = state.habits[i];
+      if (h.id !== exceptId && h.name.trim().toLowerCase() === key) return true;
+    }
+    return false;
+  }
+
+  function dateFromKey(key) {
+    var parts = String(key).split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+
+  function shiftDayKey(key, delta) {
+    var d = dateFromKey(key);
+    d.setDate(d.getDate() + delta);
+    return todayKey(d);
+  }
+
+  function shortDateLabel(key) {
+    var d = dateFromKey(key);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEKDAYS[d.getDay()];
+  }
+
+  function lastDays(count) {
+    var out = [];
+    for (var i = count - 1; i >= 0; i--) out.push(shiftDayKey(currentDay, -i));
+    return out;
+  }
+
+  function isDoneOn(id, day) {
+    return doneList(day).indexOf(id) !== -1;
+  }
+
+  // 习惯当天已存在（按创建日期判断）；若当天有打卡记录，也算存在
+  function habitExistedOn(habit, day) {
+    return habit.createdAt <= day || isDoneOn(habit.id, day);
+  }
+
+  function totalCheckins() {
+    var days = Object.keys(state.logs);
+    var total = 0;
+    for (var i = 0; i < days.length; i++) total += state.logs[days[i]].length;
+    return total;
+  }
+
+  function addHabit(name) {
+    var clean = String(name == null ? '' : name).trim();
+    if (!clean) return false;
+    if (hasDuplicateName(clean, null)) return false;
+    state.habits.push({ id: makeId(), name: clean, emoji: matchEmoji(clean), createdAt: todayKey() });
+    save();
+    return true;
+  }
+
+  function toggleHabit(id) {
+    var list = doneList(currentDay).slice();
+    var index = list.indexOf(id);
+    if (index === -1) list.push(id); else list.splice(index, 1);
+    if (list.length) state.logs[currentDay] = list; else delete state.logs[currentDay];
+    save();
+  }
+
+  function removeHabit(id) {
+    state.habits = state.habits.filter(function (h) { return h.id !== id; });
+    var days = Object.keys(state.logs);
+    for (var i = 0; i < days.length; i++) {
+      var kept = state.logs[days[i]].filter(function (hid) { return hid !== id; });
+      if (kept.length) state.logs[days[i]] = kept; else delete state.logs[days[i]];
+    }
+    if (deletingId === id) deletingId = null;
+    save();
+  }
+
+  function applyRename(id, value) {
+    var habit = null;
+    for (var i = 0; i < state.habits.length; i++) {
+      if (state.habits[i].id === id) { habit = state.habits[i]; break; }
+    }
+    if (!habit) return false;
+    var name = String(value == null ? '' : value).trim();
+    if (!name || name === habit.name) return false;
+    if (hasDuplicateName(name, id)) {
+      showHint('已经有一个叫「' + name + '」的习惯了');
+      return false;
+    }
+    habit.name = name;
+    save();
+    return true;
+  }
+
+  function setEmoji(id, emoji) {
+    for (var i = 0; i < state.habits.length; i++) {
+      if (state.habits[i].id === id) { state.habits[i].emoji = emoji; break; }
+    }
+    paletteId = null;
+    save();
+  }
+
+  /* ---------- 提示 ---------- */
+
+  function showHint(message) {
+    if (!addHintEl) return;
+    addHintEl.textContent = message;
+    addHintEl.hidden = false;
+    if (hintTimer) window.clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(hideHint, 3000);
+  }
+
+  function hideHint() {
+    if (hintTimer) { window.clearTimeout(hintTimer); hintTimer = null; }
+    if (addHintEl) addHintEl.hidden = true;
+  }
+
+  /* ---------- 渲染 ---------- */
+
+  function rowEl(id) {
+    var rows = listEl.children;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].dataset && rows[i].dataset.id === id) return rows[i];
+    }
+    return null;
+  }
+
+  function renderPalette(habit) {
+    var box = el('div', 'palette');
+    box.setAttribute('role', 'group');
+    box.setAttribute('aria-label', '选择图标');
+    for (var i = 0; i < EMOJI_PRESETS.length; i++) {
+      var emoji = EMOJI_PRESETS[i];
+      var btn = el('button', null, emoji);
+      btn.type = 'button';
+      btn.dataset.action = 'pick-emoji';
+      btn.dataset.emoji = emoji;
+      btn.setAttribute('aria-pressed', String(emoji === habit.emoji));
+      btn.setAttribute('aria-label', '使用 ' + emoji);
+      box.appendChild(btn);
+    }
+    return box;
+  }
+
+  function renderRow(habit) {
+    var done = isDone(habit.id);
+    var li = el('li', done ? 'habit done' : 'habit');
+    li.dataset.id = habit.id;
+
+    var emojiBtn = el('button', 'habit-emoji', habit.emoji);
+    emojiBtn.type = 'button';
+    emojiBtn.dataset.action = 'emoji';
+    emojiBtn.setAttribute('aria-label', '更换图标：' + habit.name);
+    emojiBtn.setAttribute('aria-expanded', String(paletteId === habit.id));
+    li.appendChild(emojiBtn);
+
+    if (editingId === habit.id) {
+      var input = el('input', 'rename-input');
+      input.type = 'text';
+      input.maxLength = 24;
+      input.value = habit.name;
+      input.dataset.id = habit.id;
+      input.setAttribute('aria-label', '重命名习惯');
+      li.appendChild(input);
+    } else {
+      var nameBtn = el('button', 'habit-name-btn');
+      nameBtn.type = 'button';
+      nameBtn.dataset.action = 'toggle';
+      nameBtn.setAttribute('role', 'checkbox');
+      nameBtn.setAttribute('aria-checked', String(done));
+      nameBtn.setAttribute('aria-label', (done ? '取消打卡：' : '打卡：') + habit.name);
+      nameBtn.appendChild(el('span', 'habit-name', habit.name));
+      li.appendChild(nameBtn);
+    }
+
+    var actions = el('div', 'habit-actions');
+    if (deletingId === habit.id) {
+      actions.appendChild(el('span', 'confirm-text', '删除？'));
+      var okBtn = el('button', 'mini-btn danger', '删除');
+      okBtn.type = 'button';
+      okBtn.dataset.action = 'confirm-delete';
+      var noBtn = el('button', 'mini-btn', '取消');
+      noBtn.type = 'button';
+      noBtn.dataset.action = 'cancel-delete';
+      actions.appendChild(okBtn);
+      actions.appendChild(noBtn);
+    } else {
+      var editBtn = el('button', 'icon-btn');
+      editBtn.type = 'button';
+      editBtn.dataset.action = 'rename';
+      editBtn.setAttribute('aria-label', '重命名：' + habit.name);
+      editBtn.innerHTML = ICON_EDIT;
+      var delBtn = el('button', 'icon-btn danger');
+      delBtn.type = 'button';
+      delBtn.dataset.action = 'delete';
+      delBtn.setAttribute('aria-label', '删除：' + habit.name);
+      delBtn.innerHTML = ICON_DELETE;
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+    }
+    li.appendChild(actions);
+
+    var check = el('span', 'check');
+    check.dataset.action = 'toggle';
+    check.setAttribute('aria-hidden', 'true');
+    check.innerHTML = ICON_CHECK;
+    li.appendChild(check);
+
+    if (paletteId === habit.id) li.appendChild(renderPalette(habit));
+    return li;
+  }
+
+  function render() {
+    todayLabelEl.textContent = formatDateLabel(new Date());
+
+    var total = state.habits.length;
+    var done = 0;
+    for (var i = 0; i < state.habits.length; i++) {
+      if (isDone(state.habits[i].id)) done++;
+    }
+
+    doneEl.textContent = String(done);
+    totalEl.textContent = String(total);
+
+    var ratio = total ? done / total : 0;
+    ringEl.style.strokeDashoffset = String(CIRC * (1 - ratio));
+    ringEl.style.stroke = total ? '#34d399' : '#dbe2ea';
+
+    if (!total) {
+      progressTextEl.textContent = '先添加一个习惯，开始今天吧';
+      progressCardEl.classList.remove('complete');
+    } else if (done === total) {
+      progressTextEl.textContent = '今天全部完成 🎉';
+      progressCardEl.classList.add('complete');
+    } else {
+      progressTextEl.textContent = '还差 ' + (total - done) + ' 项就满勤';
+      progressCardEl.classList.remove('complete');
+    }
+
+    listEl.textContent = '';
+    for (var j = 0; j < state.habits.length; j++) {
+      listEl.appendChild(renderRow(state.habits[j]));
+    }
+    emptyEl.hidden = total > 0;
+
+    renderHistory();
+    updateBanner();
+
+    if (editingId) {
+      var input = listEl.querySelector('.rename-input');
+      if (input) { input.focus(); input.select(); }
+    }
+  }
+
+  /* ---------- 历史记录 ---------- */
+
+  function renderHistory() {
+    var hasHabits = state.habits.length > 0;
+    historyCardEl.hidden = !hasHabits;
+    if (!hasHabits) return;
+
+    historySummaryEl.textContent = '累计打卡 ' + totalCheckins() + ' 次';
+    historyToggleEl.textContent = historyExpanded ? '收起' : '全部记录';
+    historyToggleEl.setAttribute('aria-expanded', String(historyExpanded));
+
+    var days = lastDays(7);
+    historyGridEl.textContent = '';
+
+    var headRow = el('li', null);
+    headRow.appendChild(el('span', 'hname-cell'));
+    for (var i = 0; i < days.length; i++) {
+      var isToday = days[i] === currentDay;
+      var cell = el('span', isToday ? 'hcell-day is-today' : 'hcell-day', isToday ? '今天' : String(dateFromKey(days[i]).getDate()));
+      cell.title = shortDateLabel(days[i]);
+      headRow.appendChild(cell);
+    }
+    historyGridEl.appendChild(headRow);
+
+    for (var h = 0; h < state.habits.length; h++) {
+      var habit = state.habits[h];
+      var row = el('li', null);
+      var nameCell = el('span', 'hname-cell');
+      nameCell.appendChild(el('span', 'hemoji', habit.emoji));
+      nameCell.appendChild(el('span', 'hname', habit.name));
+      row.appendChild(nameCell);
+
+      for (var k = 0; k < days.length; k++) {
+        var day = days[k];
+        var done = isDoneOn(habit.id, day);
+        var existed = habitExistedOn(habit, day);
+        var dot = el('span', 'hdot' + (done ? ' done' : (existed ? '' : ' muted')) + (day === currentDay ? ' is-today' : ''));
+        dot.innerHTML = ICON_CHECK;
+        dot.title = shortDateLabel(day) + ' · ' + (done ? '已打卡' : (existed ? '未打卡' : '还没有这个习惯'));
+        row.appendChild(dot);
+      }
+      historyGridEl.appendChild(row);
+    }
+
+    historyDaysEl.hidden = !historyExpanded;
+    historyDaysEl.textContent = '';
+    if (!historyExpanded) return;
+
+    var recorded = Object.keys(state.logs).filter(function (day) {
+      return doneList(day).length > 0;
+    }).sort().reverse();
+
+    if (!recorded.length) {
+      historyDaysEl.appendChild(el('li', 'hday-empty', '还没有历史打卡记录'));
+      return;
+    }
+
+    for (var r = 0; r < recorded.length; r++) {
+      var key = recorded[r];
+      var ids = doneList(key);
+      var doneHabits = state.habits.filter(function (item) { return ids.indexOf(item.id) !== -1; });
+      var existedCount = state.habits.filter(function (item) { return habitExistedOn(item, key); }).length;
+      var isFull = existedCount > 0 && doneHabits.length >= existedCount;
+
+      var li = el('li', null);
+      li.appendChild(el('span', 'hday-date', shortDateLabel(key) + (key === currentDay ? '（今天）' : '')));
+      li.appendChild(el('span', 'hday-emoji', doneHabits.map(function (item) { return item.emoji; }).join('')));
+      li.appendChild(el('span', isFull ? 'hday-count full' : 'hday-count', doneHabits.length + '/' + existedCount + (isFull ? ' 满勤' : '')));
+      historyDaysEl.appendChild(li);
+    }
+  }
+
+  historyToggleEl.addEventListener('click', function () {
+    historyExpanded = !historyExpanded;
+    renderHistory();
+  });
+
+  /* ---------- 重命名（就地更新 DOM，避免重绘打断点击） ---------- */
+
+  function patchNameCell(id) {
+    var habit = null;
+    for (var i = 0; i < state.habits.length; i++) {
+      if (state.habits[i].id === id) { habit = state.habits[i]; break; }
+    }
+    var li = rowEl(id);
+    if (!habit || !li) { render(); return; }
+
+    var done = isDone(id);
+    var nameBtn = el('button', 'habit-name-btn');
+    nameBtn.type = 'button';
+    nameBtn.dataset.action = 'toggle';
+    nameBtn.setAttribute('role', 'checkbox');
+    nameBtn.setAttribute('aria-checked', String(done));
+    nameBtn.setAttribute('aria-label', (done ? '取消打卡：' : '打卡：') + habit.name);
+    nameBtn.appendChild(el('span', 'habit-name', habit.name));
+
+    var input = li.querySelector('.rename-input');
+    if (input) li.replaceChild(nameBtn, input);
+
+    var emojiBtn = li.querySelector('[data-action="emoji"]');
+    if (emojiBtn) emojiBtn.setAttribute('aria-label', '更换图标：' + habit.name);
+    var editBtn = li.querySelector('[data-action="rename"]');
+    if (editBtn) editBtn.setAttribute('aria-label', '重命名：' + habit.name);
+    var delBtn = li.querySelector('[data-action="delete"]');
+    if (delBtn) delBtn.setAttribute('aria-label', '删除：' + habit.name);
+  }
+
+  function commitEditing() {
+    if (!editingId) return;
+    var id = editingId;
+    editingId = null;
+    var input = listEl.querySelector('.rename-input');
+    if (input) applyRename(id, input.value);
+  }
+
+  function finishRename(id, value) {
+    if (editingId !== id) return;
+    applyRename(id, value);
+    editingId = null;
+    patchNameCell(id);
+  }
+
+  function cancelRename(id) {
+    if (editingId !== id) return;
+    editingId = null;
+    patchNameCell(id);
+  }
+
+  /* ---------- 交互 ---------- */
+
+  listEl.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+    var li = target.closest('.habit');
+    if (!li) return;
+    var id = li.dataset.id;
+    var actionEl = target.closest('[data-action]');
+    var action = actionEl ? actionEl.dataset.action : null;
+
+    if (action === 'pick-emoji') { setEmoji(id, actionEl.dataset.emoji); render(); return; }
+    if (action === 'emoji') {
+      commitEditing();
+      deletingId = null;
+      paletteId = (paletteId === id) ? null : id;
+      render();
+      return;
+    }
+    if (action === 'rename') {
+      commitEditing();
+      deletingId = null;
+      paletteId = null;
+      editingId = id;
+      render();
+      return;
+    }
+    if (action === 'delete') {
+      commitEditing();
+      paletteId = null;
+      deletingId = id;
+      render();
+      return;
+    }
+    if (action === 'confirm-delete') { commitEditing(); removeHabit(id); render(); return; }
+    if (action === 'cancel-delete') { deletingId = null; render(); return; }
+
+    if (target.closest('.habit-actions') || target.closest('.palette')) return;
+    if (editingId === id) return;
+    toggleHabit(id);
+    render();
+  });
+
+  listEl.addEventListener('keydown', function (event) {
+    var target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+    var input = target.closest('.rename-input');
+    if (!input) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      finishRename(input.dataset.id, input.value);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelRename(input.dataset.id);
+    }
+  });
+
+  listEl.addEventListener('focusout', function (event) {
+    var target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+    var input = target.closest('.rename-input');
+    if (!input || !input.isConnected) return;
+    finishRename(input.dataset.id, input.value);
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!paletteId) return;
+    var target = event.target;
+    if (target && typeof target.closest === 'function' &&
+        (target.closest('.palette') || target.closest('[data-action="emoji"]'))) return;
+    paletteId = null;
+    render();
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    if (paletteId || deletingId) {
+      paletteId = null;
+      deletingId = null;
+      render();
+    }
+  });
+
+  addFormEl.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var name = addInputEl.value.trim();
+    if (!name) { addInputEl.focus(); return; }
+    if (!addHabit(name)) {
+      showHint('已经有一个叫「' + name + '」的习惯了');
+      addInputEl.select();
+      return;
+    }
+    commitEditing();
+    addInputEl.value = '';
+    hideHint();
+    render();
+    addInputEl.focus();
+  });
+
+  addInputEl.addEventListener('input', hideHint);
+
+  /* ---------- 跨天刷新 ---------- */
+
+  function tick() {
+    var key = todayKey();
+    if (key === currentDay) return;
+    currentDay = key;
+    editingId = null;
+    paletteId = null;
+    deletingId = null;
+    render();
+  }
+
+  window.setInterval(tick, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
+  window.addEventListener('focus', tick);
+
+  /* ---------- 启动 ---------- */
+
+  loadState();
+  currentDay = todayKey();
+  render();
+
+  // 便于自动化测试与调试
+  window.__habit = {
+    todayKey: todayKey,
+    formatDateLabel: formatDateLabel,
+    matchEmoji: matchEmoji,
+    normalizeState: normalizeState,
+    hasDuplicateName: hasDuplicateName,
+    addHabit: addHabit,
+    toggleHabit: toggleHabit,
+    removeHabit: removeHabit,
+    applyRename: applyRename,
+    setEmoji: setEmoji,
+    render: render,
+    isDone: isDone,
+    getState: function () { return state; },
+    setDay: function (day) { currentDay = day; },
+    isStorageOk: function () { return storageOk; }
+  };
+})();
+</script>
+</body>
+</html>
